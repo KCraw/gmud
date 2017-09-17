@@ -1,0 +1,16 @@
+{
+  "name": "GMud",
+  "version": "0.1.0",
+  "description": "A web-based MUD server written in Node",
+  "main": "app.js",
+  "repository": "https://github.com/KCraw/gmud",
+  "author": "Kris Craw & Gannon Craw",
+  "license": "MIT",
+  "engines": {
+    "node": "8.4.0"
+  },
+  "dependencies": {
+    "express": "^4.15.4",
+    "socket.io": "^2.0.3"
+  }
+}
