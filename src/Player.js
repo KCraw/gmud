@@ -1,82 +1,51 @@
 /*
   Players are game objects with sockets
  */
-const registry = require('./registry');
 const GameObject = require('./GameObject');
 
 class Player extends GameObject {
-  static lazyload() {
-    return null;
+  constructor(id, init) {
+    super(id, init);
+    this.room = init.room;
   }
 
-  constructor(data, socket = null) {
-    super(data.id);
-    this.name = data.name;
-    this.socket = null;
-    this.room = null;
-    this.connect(socket);
-    this.joinRoom('main');
+  onConnect() {
+    this.enterRoom(this.room || app.findRoom('/'));
   }
 
-  willDestruct() {
+  onDisconnect() {
+    app.remove(this.id);
+  }
+
+  willRemove() {
+    app.save(this.id);
+    // Save all my stuff too
     this.leaveRoom();
   }
 
-  delete() {
-    return false;
+  willDestroy() {
+    this.leaveRoom();
   }
 
-  connect(socket) {
-    this.socket = socket;
-    if (this.socket) {
-      this.socket.on('command', msg => {
-        // TODO: this goes to command parser
-        this.socket.to(this.room).broadcast.emit('message', `${this.name} said, "${msg}"`);
-        this.send(`You said, "${msg}"`);
-      });
-    }
+  look(id) {
+    return this.short;
   }
 
-  disconnect() {
-    this.socket = null;
-  }
-
-  send(msg) {
-    if (this.socket) {
-      this.socket.emit('message', msg);
-    }
-  }
-
-  sendRoom(msg) {
-    if (this.socket) {
-      this.socket.to(this.room).broadcast.emit('message', msg);
-    } else {
-      registry.get('Room', this.room).sendAll(msg);
-    }
-  }
-
-  joinRoom(id) {
+  enterRoom(id) {
     this.room = id;
-    if (this.socket) {
-      this.socket.join(this.room);
-    }
-    const room = registry.get('Room', this.room);
-    this.send(room.description);
-    this.send(`Also here: ${room.getPlayerNames().join(', ') || 'nobody'}.`);
-    room.addPlayer(this.id);
-    this.sendRoom(`${this.name} entered the room.`);
-    this.send('You entered the room.');
+    app.registry.get(this.room).addPlayer(this.id);
+
+    // Move this to command
+    app.io.roomsend(this.id, `${this.short} entered the room.`);
   }
 
   leaveRoom() {
-    registry.get('Room', this.room).removePlayer(this.id);
+    // Move this to command
+    app.io.roomsend(this.id, `${this.short} left the room.`);
+
+    app.registry.get(this.room).removePlayer(this.id);
     this.room = null;
-    this.sendRoom(`${this.name} left the room.`);
-    if (this.socket) {
-      this.socket.leave(this.room);
-    }
   }
 }
 
-registry.registerClass(Player.name, Player);
 module.exports = Player;

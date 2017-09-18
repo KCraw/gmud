@@ -1,50 +1,56 @@
 /*
   Rooms are areas that contain players and other objects
  */
-const registry = require('./registry');
 const GameObject = require('./GameObject');
 
-const db = {
-  main: {
-    id: 'main',
-    description: 'This is the main room. It is very main.'
+class Room extends GameObject {
+  constructor(id, init) {
+    super(id, init);
+    this.players = new Set();
+  }
+
+  willRemove() {
+    this._forceRemovePlayers();
+    app.save(this.id);
+  }
+
+  willDestroy() {
+    this._forceRemovePlayers();
+  }
+
+  _forceRemovePlayers() {
+    [...this.players].map(id => app.registry.get(id)).forEach(player => player.leaveRoom());
+  }
+
+  serialize() {
+    const copy = {...this};
+    delete copy.players;
+    return copy;
+  }
+
+  look(id) {
+    return `[${this.short}]<br />${this.long}<br />Also here: ${this.getOtherPlayerNames(id).join(', ') || 'nobody'}.`;
+  }
+
+  addPlayer(id) {
+    this.players.add(id);
+    app.io.join(id, this.id);
+    app.io.send(id, this.look(id));
+  }
+
+  removePlayer(id) {
+    app.io.leave(id, this.id);
+    this.players.delete(id);
+  }
+
+  getPlayerNames() {
+    return [...this.players].map(id => app.registry.get(id).short);
+  }
+
+  getOtherPlayerNames(pid) {
+    return [...this.players].filter(id => pid !== id).map(id => app.registry.get(id).short);
   }
 }
 
-const BindRoom = io => {
-  class Room extends GameObject {
-    static deserialize(id) {
-      return db[id];
-    }
-
-    constructor(data) {
-      super(data.id);
-      this.description = data.description;
-      this.players = new Set();
-    }
-
-    willDestruct() {
-      [...this.players].map(id => registry.get('Player', id)).forEach(player => player.leaveRoom());
-    }
-
-    sendAll(msg) {
-      io.to(this.id).emit('message', msg);
-    }
-
-    addPlayer(id) {
-      this.players.add(id);
-    }
-
-    removePlayer(id) {
-      this.players.delete(id);
-    }
-
-    getPlayerNames() {
-      return [...this.players].filter(id => registry.has('Player', id)).map(id => registry.get('Player', id).name || 'Anon');
-    }
-  }
-  registry.registerClass(Room.name, Room);
-  return Room;
-}
-
-module.exports = BindRoom;
+Room.lazyload = true;
+module.exports = Room;
