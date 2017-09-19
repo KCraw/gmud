@@ -1,11 +1,9 @@
-
 class GameObject {
   constructor(id, init) {
-    this.id = app.registry.toGlobalId(this.constructor.name, id);
+    this.id = id;
     this.short = init.short;
     this.long = init.long;
 
-    app.registry.set(this.id, this);
     // Register this object for gameserver tick
   }
 

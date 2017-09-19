@@ -1,5 +1,3 @@
-const crypto = require('crypto');
-
 class ObjectRegistry {
   constructor() {
     this._types = new Map();
@@ -44,7 +42,9 @@ class ObjectRegistry {
     const {type, id} = this.fromGlobalId(guid);
     if (this._types.get(type).lazyload) {
       const obj = app.load(type, id);
-      this._guids.set(guid, obj);
+      if (obj) {
+        this._guids.set(guid, obj);
+      }
       return obj;
     }
   }

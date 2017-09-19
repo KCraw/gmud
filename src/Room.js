@@ -29,12 +29,15 @@ class Room extends GameObject {
   }
 
   look(id) {
-    return `[${this.short}]<br />${this.long}<br />Also here: ${this.getOtherPlayerNames(id).join(', ') || 'nobody'}.`;
+    // Have this return JSON
+    return `[${this.short}]\n${this.long}\nAlso here: ${this.getOtherPlayerNames(id).join(', ') || 'nobody'}.`;
   }
 
   addPlayer(id) {
     this.players.add(id);
     app.io.join(id, this.id);
+
+    // Move this to command
     app.io.send(id, this.look(id));
   }
 

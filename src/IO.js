@@ -11,7 +11,7 @@ class IO {
     // TEMP
     socket.on('command', msg => {
       // TODO: this goes to command parser
-      this.roomsend(id, `${this.name} said, "${msg}"`);
+      this.roomsend(id, `${app.registry.get(id).short} said, "${msg}"`);
       this.send(id, `You said, "${msg}"`);
     });
     socket.on('disconnect', () => {
@@ -37,7 +37,6 @@ class IO {
   }
 
   join(id, room) {
-    this.leave(id);
     this._sockets.get(id).join(room);
     this._rooms.set(id, room);
   }
@@ -48,4 +47,3 @@ class IO {
 }
 
 module.exports = IO;
-

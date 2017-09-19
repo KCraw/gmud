@@ -27,10 +27,6 @@ class Player extends GameObject {
     this.leaveRoom();
   }
 
-  look(id) {
-    return this.short;
-  }
-
   enterRoom(id) {
     this.room = id;
     app.registry.get(this.room).addPlayer(this.id);

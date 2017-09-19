@@ -1,4 +1,5 @@
 const EventEmitter = require('events');
+const crypto = require('crypto');
 
 const IO = require('./IO');
 
@@ -29,15 +30,21 @@ class GameServer extends EventEmitter {
   }
 
   new(typeName, init) {
-    const id = require('crypto').createHash('md5').update(typeName + Math.random()).digest('hex');// insert into datastore and get id
-    const type = this.registry.getType(typeName);
-    return new type(id, init);
+    const id = crypto.createHash('md5').update(typeName + Math.random()).digest('hex'); // insert into datastore and get id
+    return this._create(typeName, id, init);
   }
 
   load(typeName, id) {
-    const type = this.registry.getType(typeName);
     const init = JSON.parse(fake_db[typeName].find(obj => obj.id === id).state); // Get this from the datastore
-    return new type(id, init);
+    return this._create(typeName, id, init);
+  }
+
+  _create(typeName, id, init) {
+    const type = this.registry.getType(typeName);
+    const guid = app.registry.toGlobalId(typeName, id);
+    const obj = new type(guid, init);
+    app.registry.set(guid, obj);
+    return obj;
   }
 
   save(guid) {
