@@ -1,5 +1,6 @@
 const EventEmitter = require('events');
 const crypto = require('crypto');
+const chalk = require('chalk');
 
 const IO = require('./IO');
 
@@ -24,6 +25,7 @@ class GameServer extends EventEmitter {
   constructor(io) {
     super();
     this.io = new IO(io);
+    this.chalk = chalk.constructor({enabled: true, level: 1});
     this.registry = new ObjectRegistry();
     this.registry.registerType(Player);
     this.registry.registerType(Room);

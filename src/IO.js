@@ -1,3 +1,10 @@
+const escapeHtml = require('escape-html');
+const ansiHTML = require('ansi-html');
+
+const ansiToHtml = str => {
+   return ansiHTML(str).replace(/(\r\n|\n|\r)/g,"<br />");
+}
+
 class IO {
   constructor(io) {
     this._io = io;
@@ -10,9 +17,10 @@ class IO {
     app.registry.get(id).onConnect();
     // TEMP
     socket.on('command', msg => {
+      const safeMsg = escapeHtml(msg);
       // TODO: this goes to command parser
-      this.roomsend(id, `${app.registry.get(id).short} said, "${msg}"`);
-      this.send(id, `You said, "${msg}"`);
+      this.roomsend(id, `${app.registry.get(id).short} said, "${safeMsg}"`);
+      this.send(id, `You said, "${safeMsg}"`);
     });
     socket.on('disconnect', () => {
       app.registry.get(id).onDisconnect();
@@ -25,15 +33,15 @@ class IO {
   }
 
   send(id, msg, key = 'message') {
-    this._sockets.get(id).emit(key, msg);
+    this._sockets.get(id).emit(key, ansiToHtml(msg));
   }
 
   roomsend(id, msg, key = 'message') {
-    this._sockets.get(id).to(this._rooms.get(id)).emit(key, msg);
+    this._sockets.get(id).to(this._rooms.get(id)).emit(key, ansiToHtml(msg));
   }
 
   roomsendAll(id, msg, key = 'message') {
-    this._io.to(this._rooms.get(id)).emit(key, msg);
+    this._io.to(this._rooms.get(id)).emit(key, ansiToHtml(msg));
   }
 
   join(id, room) {

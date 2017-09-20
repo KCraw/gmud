@@ -30,7 +30,7 @@ class Room extends GameObject {
 
   look(id) {
     // Have this return JSON
-    return `[${this.short}]\n${this.long}\nAlso here: ${this.getOtherPlayerNames(id).join(', ') || 'nobody'}.`;
+    return app.chalk`[${this.short}]\n${this.long}\n{yellow Also here}: ${this.getOtherPlayerNames(id).join(', ') || 'nobody'}.`;
   }
 
   addPlayer(id) {
